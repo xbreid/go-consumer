@@ -9,6 +9,7 @@ import (
 	"go-consumer/ent/accountgroup"
 	"go-consumer/ent/predicate"
 	"sync"
+	"time"
 
 	"entgo.io/ent"
 	"entgo.io/ent/dialect/sql"
@@ -35,6 +36,7 @@ type AccountGroupMutation struct {
 	id            *uuid.UUID
 	display_name  *string
 	external_id   *string
+	created_at    *time.Time
 	clearedFields map[string]struct{}
 	done          bool
 	oldValue      func(context.Context) (*AccountGroup, error)
@@ -230,6 +232,42 @@ func (m *AccountGroupMutation) ResetExternalID() {
 	m.external_id = nil
 }
 
+// SetCreatedAt sets the "created_at" field.
+func (m *AccountGroupMutation) SetCreatedAt(t time.Time) {
+	m.created_at = &t
+}
+
+// CreatedAt returns the value of the "created_at" field in the mutation.
+func (m *AccountGroupMutation) CreatedAt() (r time.Time, exists bool) {
+	v := m.created_at
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldCreatedAt returns the old "created_at" field's value of the AccountGroup entity.
+// If the AccountGroup object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *AccountGroupMutation) OldCreatedAt(ctx context.Context) (v time.Time, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldCreatedAt is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldCreatedAt requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldCreatedAt: %w", err)
+	}
+	return oldValue.CreatedAt, nil
+}
+
+// ResetCreatedAt resets all changes to the "created_at" field.
+func (m *AccountGroupMutation) ResetCreatedAt() {
+	m.created_at = nil
+}
+
 // Where appends a list predicates to the AccountGroupMutation builder.
 func (m *AccountGroupMutation) Where(ps ...predicate.AccountGroup) {
 	m.predicates = append(m.predicates, ps...)
@@ -264,12 +302,15 @@ func (m *AccountGroupMutation) Type() string {
 // order to get all numeric fields that were incremented/decremented, call
 // AddedFields().
 func (m *AccountGroupMutation) Fields() []string {
-	fields := make([]string, 0, 2)
+	fields := make([]string, 0, 3)
 	if m.display_name != nil {
 		fields = append(fields, accountgroup.FieldDisplayName)
 	}
 	if m.external_id != nil {
 		fields = append(fields, accountgroup.FieldExternalID)
+	}
+	if m.created_at != nil {
+		fields = append(fields, accountgroup.FieldCreatedAt)
 	}
 	return fields
 }
@@ -283,6 +324,8 @@ func (m *AccountGroupMutation) Field(name string) (ent.Value, bool) {
 		return m.DisplayName()
 	case accountgroup.FieldExternalID:
 		return m.ExternalID()
+	case accountgroup.FieldCreatedAt:
+		return m.CreatedAt()
 	}
 	return nil, false
 }
@@ -296,6 +339,8 @@ func (m *AccountGroupMutation) OldField(ctx context.Context, name string) (ent.V
 		return m.OldDisplayName(ctx)
 	case accountgroup.FieldExternalID:
 		return m.OldExternalID(ctx)
+	case accountgroup.FieldCreatedAt:
+		return m.OldCreatedAt(ctx)
 	}
 	return nil, fmt.Errorf("unknown AccountGroup field %s", name)
 }
@@ -318,6 +363,13 @@ func (m *AccountGroupMutation) SetField(name string, value ent.Value) error {
 			return fmt.Errorf("unexpected type %T for field %s", value, name)
 		}
 		m.SetExternalID(v)
+		return nil
+	case accountgroup.FieldCreatedAt:
+		v, ok := value.(time.Time)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetCreatedAt(v)
 		return nil
 	}
 	return fmt.Errorf("unknown AccountGroup field %s", name)
@@ -382,6 +434,9 @@ func (m *AccountGroupMutation) ResetField(name string) error {
 		return nil
 	case accountgroup.FieldExternalID:
 		m.ResetExternalID()
+		return nil
+	case accountgroup.FieldCreatedAt:
+		m.ResetCreatedAt()
 		return nil
 	}
 	return fmt.Errorf("unknown AccountGroup field %s", name)

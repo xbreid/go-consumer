@@ -13,6 +13,7 @@ var (
 		{Name: "oid", Type: field.TypeUUID},
 		{Name: "display_name", Type: field.TypeString, Nullable: true},
 		{Name: "external_id", Type: field.TypeString, Unique: true},
+		{Name: "created_at", Type: field.TypeTime},
 	}
 	// AccountGroupsTable holds the schema information for the "account_groups" table.
 	AccountGroupsTable = &schema.Table{

@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"go-consumer/ent/accountgroup"
 	"strings"
+	"time"
 
 	"entgo.io/ent"
 	"entgo.io/ent/dialect/sql"
@@ -20,7 +21,9 @@ type AccountGroup struct {
 	// DisplayName holds the value of the "display_name" field.
 	DisplayName string `json:"display_name,omitempty"`
 	// ExternalID holds the value of the "external_id" field.
-	ExternalID   string `json:"external_id,omitempty"`
+	ExternalID string `json:"external_id,omitempty"`
+	// CreatedAt holds the value of the "created_at" field.
+	CreatedAt    time.Time `json:"created_at,omitempty"`
 	selectValues sql.SelectValues
 }
 
@@ -31,6 +34,8 @@ func (*AccountGroup) scanValues(columns []string) ([]any, error) {
 		switch columns[i] {
 		case accountgroup.FieldDisplayName, accountgroup.FieldExternalID:
 			values[i] = new(sql.NullString)
+		case accountgroup.FieldCreatedAt:
+			values[i] = new(sql.NullTime)
 		case accountgroup.FieldID:
 			values[i] = new(uuid.UUID)
 		default:
@@ -65,6 +70,12 @@ func (ag *AccountGroup) assignValues(columns []string, values []any) error {
 				return fmt.Errorf("unexpected type %T for field external_id", values[i])
 			} else if value.Valid {
 				ag.ExternalID = value.String
+			}
+		case accountgroup.FieldCreatedAt:
+			if value, ok := values[i].(*sql.NullTime); !ok {
+				return fmt.Errorf("unexpected type %T for field created_at", values[i])
+			} else if value.Valid {
+				ag.CreatedAt = value.Time
 			}
 		default:
 			ag.selectValues.Set(columns[i], values[i])
@@ -107,6 +118,9 @@ func (ag *AccountGroup) String() string {
 	builder.WriteString(", ")
 	builder.WriteString("external_id=")
 	builder.WriteString(ag.ExternalID)
+	builder.WriteString(", ")
+	builder.WriteString("created_at=")
+	builder.WriteString(ag.CreatedAt.Format(time.ANSIC))
 	builder.WriteByte(')')
 	return builder.String()
 }

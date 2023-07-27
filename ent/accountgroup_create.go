@@ -7,6 +7,7 @@ import (
 	"errors"
 	"fmt"
 	"go-consumer/ent/accountgroup"
+	"time"
 
 	"entgo.io/ent/dialect"
 	"entgo.io/ent/dialect/sql"
@@ -40,6 +41,20 @@ func (agc *AccountGroupCreate) SetNillableDisplayName(s *string) *AccountGroupCr
 // SetExternalID sets the "external_id" field.
 func (agc *AccountGroupCreate) SetExternalID(s string) *AccountGroupCreate {
 	agc.mutation.SetExternalID(s)
+	return agc
+}
+
+// SetCreatedAt sets the "created_at" field.
+func (agc *AccountGroupCreate) SetCreatedAt(t time.Time) *AccountGroupCreate {
+	agc.mutation.SetCreatedAt(t)
+	return agc
+}
+
+// SetNillableCreatedAt sets the "created_at" field if the given value is not nil.
+func (agc *AccountGroupCreate) SetNillableCreatedAt(t *time.Time) *AccountGroupCreate {
+	if t != nil {
+		agc.SetCreatedAt(*t)
+	}
 	return agc
 }
 
@@ -92,6 +107,10 @@ func (agc *AccountGroupCreate) ExecX(ctx context.Context) {
 
 // defaults sets the default values of the builder before save.
 func (agc *AccountGroupCreate) defaults() {
+	if _, ok := agc.mutation.CreatedAt(); !ok {
+		v := accountgroup.DefaultCreatedAt()
+		agc.mutation.SetCreatedAt(v)
+	}
 	if _, ok := agc.mutation.ID(); !ok {
 		v := accountgroup.DefaultID()
 		agc.mutation.SetID(v)
@@ -102,6 +121,9 @@ func (agc *AccountGroupCreate) defaults() {
 func (agc *AccountGroupCreate) check() error {
 	if _, ok := agc.mutation.ExternalID(); !ok {
 		return &ValidationError{Name: "external_id", err: errors.New(`ent: missing required field "AccountGroup.external_id"`)}
+	}
+	if _, ok := agc.mutation.CreatedAt(); !ok {
+		return &ValidationError{Name: "created_at", err: errors.New(`ent: missing required field "AccountGroup.created_at"`)}
 	}
 	return nil
 }
@@ -146,6 +168,10 @@ func (agc *AccountGroupCreate) createSpec() (*AccountGroup, *sqlgraph.CreateSpec
 	if value, ok := agc.mutation.ExternalID(); ok {
 		_spec.SetField(accountgroup.FieldExternalID, field.TypeString, value)
 		_node.ExternalID = value
+	}
+	if value, ok := agc.mutation.CreatedAt(); ok {
+		_spec.SetField(accountgroup.FieldCreatedAt, field.TypeTime, value)
+		_node.CreatedAt = value
 	}
 	return _node, _spec
 }
@@ -245,6 +271,9 @@ func (u *AccountGroupUpsertOne) UpdateNewValues() *AccountGroupUpsertOne {
 	u.create.conflict = append(u.create.conflict, sql.ResolveWith(func(s *sql.UpdateSet) {
 		if _, exists := u.create.mutation.ID(); exists {
 			s.SetIgnore(accountgroup.FieldID)
+		}
+		if _, exists := u.create.mutation.CreatedAt(); exists {
+			s.SetIgnore(accountgroup.FieldCreatedAt)
 		}
 	}))
 	return u
@@ -490,6 +519,9 @@ func (u *AccountGroupUpsertBulk) UpdateNewValues() *AccountGroupUpsertBulk {
 		for _, b := range u.create.builders {
 			if _, exists := b.mutation.ID(); exists {
 				s.SetIgnore(accountgroup.FieldID)
+			}
+			if _, exists := b.mutation.CreatedAt(); exists {
+				s.SetIgnore(accountgroup.FieldCreatedAt)
 			}
 		}
 	}))
